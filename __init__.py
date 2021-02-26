@@ -23,6 +23,8 @@ bl_info = {
     "category" : "Generic"
 }
 
+bpy.types.Object.mychosenObject = bpy.props.StringProperty()
+
 # TEST:操作的对象，如materials,objects
 # hello: 操作的具体内容
 class TEST_OT_hello(bpy.types.Operator):
@@ -48,7 +50,7 @@ class TEST_OT_printname(bpy.types.Operator):
 
     def execute(self, context):
         ob = context.object
-        self.report({"INFO"}, ob.name)
+        self.report({"INFO"}, ob.mychosenObject)
         return {"FINISHED"}
 
 
@@ -87,7 +89,6 @@ class TEST_PT_view3d_1(bpy.types.Panel):
         # row.Operator("cx.hello", text='hello', icon='CUBE').mStr = "hello blender"
         row.operator("cx.hello", text='hello', icon='CUBE')
 
-
 # 面板2
 class TEST_PT_view3d_2(SpaceAndRegionSetting,bpy.types.Panel):
     bl_label = "view3d test 2"
@@ -103,8 +104,13 @@ class TEST_PT_view3d_2(SpaceAndRegionSetting,bpy.types.Panel):
         
     # 面板如何绘制函数
     def draw(self, context):
+        obj = context.object
+
         # 获取布局
         layout = self.layout
+        # 选择物体，并将选择的物体名返回到Object.mychoseObject
+        layout.prop_search(obj, "mychosenObject",  context.scene, "objects")
+
         # icon获取有图标插件，addon界面搜索'icon'
         layout.label(text="panel", icon="BLENDER")
         row = layout.row()
@@ -116,13 +122,13 @@ class TEST_PT_view3d_2(SpaceAndRegionSetting,bpy.types.Panel):
         # 下拉菜单获取Scene中物体对象
         row = layout.row()
         row.template_ID(context.view_layer.objects, "active", filter='AVAILABLE')
+        # 使用上述方法存在的问题是多个这样的下拉菜单会同时改变，相互之间会受到影响
         # 将选中的物体赋值给ob，
         ob = context.object 
         col = layout.column()
         col.prop(ob,'name',text="Name")
         # 实现操作2，打印物体名称，即UI界面选中的物体，通过context.object在operator可以访问数据
         col.operator("cx.printname", text="print name")
-
 
 
 def register():
